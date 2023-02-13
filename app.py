@@ -79,7 +79,7 @@ def handle_message(event):
 
     if event.message.text == "起動":
         bot = True
-        reply = "起動しました。"
+        reply = "起動します。爆発まで．．．．"
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=reply))
