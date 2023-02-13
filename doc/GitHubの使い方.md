@@ -87,7 +87,22 @@ git push origin ブランチ名
 
 ### 4. Pull Requestの作成
 ![](images/pull_request1.png)
-GitHubのページに移動したら、上の方にある `Pull requests` をクリック、`New pull request` をクリックします。
+GitHubのページに移動したら、上の方にある `Pull requests` をクリック、`Compare & pull request` をクリックします。
 
-![](images/pull_request2.png)
-`base: main` になっていることを確認し、`compare: ブランチ名` をクリックします。
+<!-- Compare & pull request がない場合  -->
+<details>
+<summary>Compare & pull request がない場合</summary>
+<div>
+ない場合は`New pull request` をクリックします。
+</div>
+<img src="images/pull_request2.png" width="500px">
+<div>
+`compare: main` をクリックし、作成したブランチを選択し、`Create pull request` をクリックするとプルリクエストが作成されます。
+</div>
+</details>
+
+プルリクエストのメッセージを書いて、プルリクエストを作成します。
+![](images/pull_request3.png)
+
+### 5. レビュー
+プルリクエストが作成されたら、レビューをしてもらいます。
