@@ -1,24 +1,7 @@
-import openai
-
-# secrets/openai_API_KEY.txtにAPIキーを保存して、それを読み込む
-openai.api_key = open("secrets/openai_API_KEY.txt").read().strip()
-
-def generate_text(prompt, api_key):
-    completions = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
-        max_tokens=1024,
-        n=1,
-        stop=None,
-        temperature=0.5,
-    )
-    message = completions.choices[0].text
-    return message
-
-
-
-
 import os
+from utils.myGPT import generate_text
+from src.chatcat import ChatCat
+import openai
 
 from flask import Flask, request, abort
 
@@ -27,6 +10,11 @@ from linebot.exceptions import (InvalidSignatureError)
 from linebot.models import (MessageEvent, TextMessage, TextSendMessage,)
 
 app = Flask(__name__)
+# 送られてきたグループIDとChatCatのインスタンスを紐付ける辞書
+chatcat_dict = {}
+
+# secrets/openai_API_KEY.txtにAPIキーを保存して、それを読み込む
+openai.api_key = open("secrets/openai_API_KEY.txt").read().strip()
 
 # secrets/line_channel_access_token.txtにアクセストークンを保存して、それを読み込む
 line_bot_api = LineBotApi(open("secrets/line_channel_access_token.txt").read().strip())
@@ -55,36 +43,15 @@ def callback():
 
     return 'OK'
 
-bot = False
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    
-    global bot
-    
-    if event.message.text == "終了":
-        bot = False
-        reply = "終了しました。"
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=reply))
-    
-    if bot == True:
-        api_key = openai.api_key
-        prompt = event.message.text
-        reply = generate_text(prompt,api_key)
-        reply = reply.strip()
-        print(reply)
+    # グループIDが登録されていなかったら、ChatCatのインスタンスを作成して、グループIDと紐付ける
+    if event.source.group_id not in chatcat_dict:
+        chatcat_dict[event.source.group_id] = ChatCat()
 
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=reply))
-
-    if event.message.text == "起動":
-        bot = True
-        reply = "起動します。爆発まで．．．．"
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=reply))
+    # グループIDに紐付けられたChatCatのインスタンスを取得
+    chatcat = chatcat_dict[event.source.group_id]
+    chatcat.run(event)
 
 
 if __name__ == "__main__":
