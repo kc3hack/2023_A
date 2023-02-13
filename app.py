@@ -1,6 +1,7 @@
 import openai
 
-openai.api_key = "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"
+# secrets/openai_API_KEY.txtにAPIキーを保存して、それを読み込む
+openai.api_key = open("secrets/openai_API_KEY.txt").read().strip()
 
 def generate_text(prompt, api_key):
     completions = openai.Completion.create(
@@ -27,8 +28,9 @@ from linebot.models import (MessageEvent, TextMessage, TextSendMessage,)
 
 app = Flask(__name__)
 
-line_bot_api = LineBotApi('v6JcBNiQFQmHVK7qqXb87rcsVmM8QFXQqEDouXT0wWOt+8lAcaOJ4ieOdlUcHmV+qXfvETZM84p/cC8aiU+0B1/iJDkdqNJm58awIYI0hcjpFejLNIjBxBOn68QyLYGVamSSCSGFf7hi4c6KAKJA0AdB04t89/1O/w1cDnyilFU=')
-handler = WebhookHandler('6bd4bc0e7b73f5166b81e493b5bd5443')
+# secrets/line_channel_access_token.txtにアクセストークンを保存して、それを読み込む
+line_bot_api = LineBotApi(open("secrets/line_channel_access_token.txt").read().strip())
+handler = WebhookHandler(open("secrets/line_channel_secret.txt").read().strip())
 
 @app.route("/")
 def test():
