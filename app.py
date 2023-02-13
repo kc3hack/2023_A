@@ -51,7 +51,12 @@ def handle_message(event):
 
     # グループIDに紐付けられたChatCatのインスタンスを取得
     chatcat = chatcat_dict[event.source.group_id]
-    chatcat.run(event)
+    reply = chatcat.run(event)
+
+    if reply is not None:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply))
 
 
 if __name__ == "__main__":

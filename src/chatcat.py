@@ -34,6 +34,8 @@ class ChatCat():
             return self.stop()
         elif self.is_running:
             return self.reply(event)
+        else:
+            return None
 
     def start(self):
         is_running = True
