@@ -1,6 +1,7 @@
 import openai
 
-openai.api_key = "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"
+# secrets/openai_API_KEY.txtにAPIキーを保存して、それを読み込む
+openai.api_key = open("secrets/openai_API_KEY.txt").read().strip()
 
 def generate_text(prompt, api_key):
     completions = openai.Completion.create(
