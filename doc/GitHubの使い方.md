@@ -116,3 +116,9 @@ git switch ブランチ名
 ![](images/review.png)
 File changed をクリックすると、プルリクエストで追加・変更されたファイルが表示されます。
 問題がなければReview changesをクリックし、コメントを入力し、Approveをクリック、`Submit review` をクリックしレビューを完了させましょう。
+
+
+Approveされたら、プルリクエストをマージします。
+![](images/merge.png)
+
+お疲れ様でした！
