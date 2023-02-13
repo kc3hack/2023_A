@@ -69,7 +69,7 @@ def handle_message(event):
             TextSendMessage(text=reply))
     
     if bot == True:
-        api_key = "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"
+        api_key = openai.api_key
         prompt = event.message.text
         reply = generate_text(prompt,api_key)
         reply = reply.strip()
