@@ -16,6 +16,7 @@ from linebot.models import (MessageEvent, TextMessage, TextSendMessage,)
 place_list = ['待ち合わせ', '飲食店', 'アパレル', 'その他']
 
 class ChatCat():
+    replies = list()
     is_running = False          # ボットを起動中かどうか
     channel_access_token = None # チャンネルアクセストークン
     channel_secret = None       # チャンネルシークレット
@@ -29,45 +30,43 @@ class ChatCat():
 
     def run(self, event):
         if event.message.text == 'start':
-            return self.start()
+            self.start()
         elif event.message.text == 'stop':
-            return self.stop()
+            self.stop()
         elif self.is_running:
-            return self.reply(event)
-        else:
-            return None
+            self.reply(event)
 
     def start(self):
         is_running = True
-        return 'ボットを起動しました'
+        talk('ボットを起動しました')
 
     def stop(self):
         is_running = False
-        return 'ボットを停止しました'
+        talk('ボットを停止しました')
 
     def reply(self, event):
         # 各機能ごとの処理に割り振る
         message = event.message.text.split(' ')
         if message[0] in place_list:
-            return self.recommend(event)
+            self.recommend(event)
         elif message[0] == 'おみくじ':
-            return self.omikuji(event)
+            self.omikuji(event)
         elif message[0] == 'ルーレット':
-            return self.roulette(event)
+            self.roulette(event)
         else:
-            return self.chat(event)
+            self.chat(event)
 
     # おすすめ検索機能
     def recommend(self, event, message):
         # 待ち合わせ、飲食店、アパレル、その他で分類
         if event.message.text == '待ち合わせ':
-            return meeting_recomend(self,event,message)
+            meeting_recomend(self,event,message)
         elif event.message.text == '飲食店':
-            return restaurant_recomend(self,event,message)
+            restaurant_recomend(self,event,message)
         elif event.message.text == 'アパレル':
-            return apparel_recomend(self,event,message)
+            apparel_recomend(self,event,message)
         else:
-            return other_recomend(self,event,message)
+            other_recomend(self,event,message)
 
     # おみくじ機能
     def omikuji(self, event):
@@ -79,4 +78,7 @@ class ChatCat():
 
     # 会話機能
     def chat(self, event):
-        return generate_text(event.message.text)
+        talk(generate_text(event.message.text))
+    
+    def talk(text):
+        self.replies.append(text)
