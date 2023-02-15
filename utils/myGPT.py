@@ -13,6 +13,8 @@ def generate_text(prompt):
         stop=None,
     )
     message = completions.choices[0].text
+    # 最初の改行は削除
+    message = message.replace("\n", "", 2)
     return message
 
 if __name__ == '__main__':
