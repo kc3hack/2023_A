@@ -1,2 +1,2 @@
-def restaurant_recomend(chatcat,event,message):
+def restaurant_recomend(chatcat,event):
     pass

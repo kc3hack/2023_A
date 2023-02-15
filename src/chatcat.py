@@ -51,16 +51,16 @@ class ChatCat():
             self.chat(event)
 
     # おすすめ検索機能
-    def recommend(self, event, message):
+    def recommend(self, event):
         # 待ち合わせ、飲食店、アパレル、その他で分類
         if event.message.text == '待ち合わせ':
-            meeting_recomend(self,event,message)
+            meeting_recomend(self,event)
         elif event.message.text == '飲食店':
-            restaurant_recomend(self,event,message)
+            restaurant_recomend(self,event)
         elif event.message.text == 'アパレル':
-            apparel_recomend(self,event,message)
+            apparel_recomend(self,event)
         else:
-            other_recomend(self,event,message)
+            other_recomend(self,event)
 
     # おみくじ機能
     def omikuji(self, event):

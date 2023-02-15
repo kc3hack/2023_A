@@ -1,2 +1,2 @@
-def other_recomend(chatcat,event,message):
+def other_recomend(chatcat,event):
     pass
