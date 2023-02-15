@@ -52,7 +52,7 @@ def handle_message(event):
     # グループIDに紐付けられたChatCatのインスタンスを取得
     chatcat = chatcat_dict[event.source.group_id]
     chatcat.run(event)
-    
+
     for reply in chatcat.replies:
         line_bot_api.reply_message(
             event.reply_token,

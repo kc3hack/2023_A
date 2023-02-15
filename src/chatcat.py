@@ -1,13 +1,13 @@
 # LINEBotのメインクラス
 import os
 
-from meeting import meeting_recomend
-from restaurant import restaurant_recomend
-from apparel import apparel_recomend
-from other import other_recomend
+from src.meeting import meeting_recomend
+from src.restaurant import restaurant_recomend
+from src.apparel import apparel_recomend
+from src.other import other_recomend
 from flask import Flask, request, abort
 
-from myGPT import generate_text
+from utils.myGPT import generate_text
 
 from linebot import (LineBotApi, WebhookHandler)
 from linebot.exceptions import (InvalidSignatureError)
@@ -38,11 +38,11 @@ class ChatCat():
 
     def start(self):
         is_running = True
-        talk('ボットを起動しました')
+        self.talk('ボットを起動しました')
 
     def stop(self):
         is_running = False
-        talk('ボットを停止しました')
+        self.talk('ボットを停止しました')
 
     def reply(self, event):
         # 各機能ごとの処理に割り振る
@@ -78,7 +78,7 @@ class ChatCat():
 
     # 会話機能
     def chat(self, event):
-        talk(generate_text(event.message.text))
-    
-    def talk(text):
-        self.replies.append(text)
+        self.talk(generate_text(event.message.text))
+
+    def talk(self, text):
+        self.replies.append(TextSendMessage(text=text))
