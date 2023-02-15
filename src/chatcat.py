@@ -18,15 +18,9 @@ place_list = ['待ち合わせ', '飲食店', 'アパレル', 'その他']
 class ChatCat():
     replies = list()
     is_running = False          # ボットを起動中かどうか
-    channel_access_token = None # チャンネルアクセストークン
-    channel_secret = None       # チャンネルシークレット
-    line_bot_api = None         # LINEBotのAPIインスタンス
-    handler = None              # LINEBotのハンドラインスタンス
 
-    def __init__(self, channel_access_token):
-        self.channel_access_token = channel_access_token
-        self.line_bot_api = LineBotApi(channel_access_token)
-        self.handler = WebhookHandler(channel_access_token)
+    def __init__(self):
+        self.talk('こんにちは！')
 
     def run(self, event):
         if event.message.text == 'start':
@@ -37,11 +31,11 @@ class ChatCat():
             self.reply(event)
 
     def start(self):
-        is_running = True
+        self.is_running = True
         self.talk('ボットを起動しました')
 
     def stop(self):
-        is_running = False
+        self.is_running = False
         self.talk('ボットを停止しました')
 
     def reply(self, event):
@@ -57,16 +51,16 @@ class ChatCat():
             self.chat(event)
 
     # おすすめ検索機能
-    def recommend(self, event, message):
+    def recommend(self, event):
         # 待ち合わせ、飲食店、アパレル、その他で分類
         if event.message.text == '待ち合わせ':
-            meeting_recomend(self,event,message)
+            meeting_recomend(self,event)
         elif event.message.text == '飲食店':
-            restaurant_recomend(self,event,message)
+            restaurant_recomend(self,event)
         elif event.message.text == 'アパレル':
-            apparel_recomend(self,event,message)
+            apparel_recomend(self,event)
         else:
-            other_recomend(self,event,message)
+            other_recomend(self,event)
 
     # おみくじ機能
     def omikuji(self, event):

@@ -1,2 +1,2 @@
-def apparel_recomend(chatcat,event,message):
+def apparel_recomend(chatcat,event):
     pass

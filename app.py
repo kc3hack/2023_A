@@ -45,18 +45,27 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    # グループIDが登録されていなかったら、ChatCatのインスタンスを作成して、グループIDと紐付ける
-    if event.source.group_id not in chatcat_dict:
-        chatcat_dict[event.source.group_id] = ChatCat()
+    # グループチャットの場合
+    if (event.source.type == "group"):
+        # グループIDが登録されていなかったら、ChatCatのインスタンスを作成して、グループIDと紐付ける
+        if event.source.group_id not in chatcat_dict:
+            chatcat_dict[event.source.group_id] = ChatCat()
 
-    # グループIDに紐付けられたChatCatのインスタンスを取得
-    chatcat = chatcat_dict[event.source.group_id]
+        # グループIDに紐付けられたChatCatのインスタンスを取得
+        chatcat = chatcat_dict[event.source.group_id]
+    # 個チャの場合
+    if (event.source.type == "user"):
+        if event.source.user_id not in chatcat_dict:
+            chatcat_dict[event.source.user_id] = ChatCat()
+
+        # 個人IDに紐付けられたChatCatのインスタンスを取得
+        chatcat = chatcat_dict[event.source.user_id]
     chatcat.run(event)
 
-    for reply in chatcat.replies:
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=reply))
+    line_bot_api.reply_message(
+        event.reply_token,
+        [TextSendMessage(text=send_text.text) for send_text in chatcat.replies]
+    )
     chatcat.replies = []
 
 
