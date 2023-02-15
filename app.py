@@ -7,7 +7,7 @@ from flask import Flask, request, abort
 
 from linebot import (LineBotApi, WebhookHandler)
 from linebot.exceptions import (InvalidSignatureError)
-from linebot.models import (MessageEvent, TextMessage, TextSendMessage,)
+from linebot.models import (MessageEvent, TextMessage, TextSendMessage,LocationMessage)
 
 app = Flask(__name__)
 # 送られてきたグループIDとChatCatのインスタンスを紐付ける辞書
@@ -44,6 +44,22 @@ def callback():
     return 'OK'
 
 @handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    # グループIDが登録されていなかったら、ChatCatのインスタンスを作成して、グループIDと紐付ける
+    if event.source.group_id not in chatcat_dict:
+        chatcat_dict[event.source.group_id] = ChatCat()
+
+    # グループIDに紐付けられたChatCatのインスタンスを取得
+    chatcat = chatcat_dict[event.source.group_id]
+    chatcat.run(event)
+    
+    for reply in chatcat.replies:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply))
+    chatcat.replies = []
+    
+@handler.add(MessageEvent, message=LocationMessage)
 def handle_message(event):
     # グループIDが登録されていなかったら、ChatCatのインスタンスを作成して、グループIDと紐付ける
     if event.source.group_id not in chatcat_dict:
