@@ -16,7 +16,7 @@ from linebot import (LineBotApi, WebhookHandler)
 from linebot.exceptions import (InvalidSignatureError)
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,TemplateSendMessage,CarouselTemplate,CarouselColumn,
-    PostbackEvent,
+    PostbackEvent,DatetimePickerAction,
     QuickReply, QuickReplyButton
 )
 from linebot.models.actions import PostbackAction
@@ -73,7 +73,7 @@ class ChatCat():
                 title="飲食店",
                 text="指定された条件の飲食店を検索します",
                 actions=[
-                    PostbackAction(label="検索", data="restaurant"),
+                    PostbackAction(label="使用", data="restaurant"),
                     PostbackAction(label="ヘルプ", data="help")
                 ]
             )
@@ -84,7 +84,7 @@ class ChatCat():
                 title="待ち合わせ場所",
                 text="指定された条件の待ち合わせ場所を検索します",
                 actions=[
-                    PostbackAction(label="検索", data="apparel"),
+                    PostbackAction(label="使用", data="meeting"),
                     PostbackAction(label="ヘルプ", data="help")
                 ]
             )
