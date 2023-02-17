@@ -9,7 +9,7 @@ from linebot.models import (
 from linebot.models.actions import (PostbackAction)
 
 
-google_api_key = "AIzaSyDrkI9Pc-3QRNgiWg2DiE8LDyCBHksiPJg"
+google_api_key = open("secrets/google_api_key.txt").read().strip()
 nearbysearch_api_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/"
 geocode_api_url = "https://maps.googleapis.com/maps/api/geocode/json"
 google_map_url = "https://www.google.com/maps/search/?api=1"
