@@ -19,11 +19,11 @@ def meeting_recomend(chatcat,event):
         recommend_place_no1,recommend_place_no2,recommend_place_no3,decide_place,decide_time = "Init","Init","Init","Init","Init"
 
     if flag_flow_decide_place == True:
-        if event.postback.params["data"] == "place_no1":
+        if event.postback.data == "place_no1":
             decide_place = recommend_place_no1
-        elif event.postback.params["data"] == "place_no2":
+        elif event.postback.data == "place_no2":
             decide_place = recommend_place_no2
-        elif event.postback.params["data"] == "place_no3":
+        elif event.postback.data == "place_no3":
             decide_place = recommend_place_no3
         flag_flow_decide_place = False
         flag_flow_decide_time = True

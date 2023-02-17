@@ -56,7 +56,7 @@ class ChatCat():
         elif event.type == "message" and event.message.text == 'stop':
             self.stop()
         elif self.is_running:
-            if event.type == "postback":
+            if event.type == "postback" and event.postback.data in self.mode_dict:
                 self.mode = event.postback.data
             self.reply(event)
 
