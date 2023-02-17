@@ -7,7 +7,12 @@ from flask import Flask, request, abort
 
 from linebot import (LineBotApi, WebhookHandler)
 from linebot.exceptions import (InvalidSignatureError)
-from linebot.models import (MessageEvent, TextMessage, TextSendMessage,)
+from linebot.models import (
+    MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage, CarouselTemplate, CarouselColumn, LocationMessage,
+    PostbackEvent,
+    QuickReply, QuickReplyButton
+)
+from linebot.models.actions import PostbackAction
 
 app = Flask(__name__)
 # 送られてきたグループIDとChatCatのインスタンスを紐付ける辞書
@@ -45,6 +50,24 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    chatcat = get_chatcat(event)
+    chatcat.run(event)
+    line_bot_api.reply_message(event.reply_token,chatcat.replies)
+
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    chatcat = get_chatcat(event)
+    chatcat.run(event)
+    line_bot_api.reply_message(event.reply_token,chatcat.replies)
+
+@handler.add(MessageEvent, message=LocationMessage)
+def handle_location_message(event):
+    chatcat = get_chatcat(event)
+    chatcat.run(event)
+    line_bot_api.reply_message(event.reply_token,chatcat.replies)
+
+
+def get_chatcat(event):
     # グループチャットの場合
     if (event.source.type == "group"):
         # グループIDが登録されていなかったら、ChatCatのインスタンスを作成して、グループIDと紐付ける
@@ -60,13 +83,7 @@ def handle_message(event):
 
         # 個人IDに紐付けられたChatCatのインスタンスを取得
         chatcat = chatcat_dict[event.source.user_id]
-    chatcat.run(event)
-
-    line_bot_api.reply_message(
-        event.reply_token,
-        [TextSendMessage(text=send_text.text) for send_text in chatcat.replies]
-    )
-    chatcat.replies = []
+    return chatcat
 
 
 if __name__ == "__main__":
