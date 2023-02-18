@@ -12,25 +12,25 @@ from linebot.models import (
 )
 from linebot.models.actions import PostbackAction
 
+#その日を確認する
 def meeting_timer_check_day(year,month,day):
     flag_next_timer = False
-    tmp_now = str.strip(datetime.datetime.now())
-    now = re.split('-:',tmp_now)
-    now_year = now[0]
-    now_month = now[1]
-    now_day = now[2]
+    now = datetime.datetime.now()
+    now_year = str(now.year)
+    now_month = str(now.month)
+    now_day = str(now.day)
     if now_year == year:
         if now_month == month:
             if now_day == day:
                 flag_next_timer = True
     return flag_next_timer
 
+#時間を確認する
 def send_meeting_time_checker(hour,minute):
     flag_meeting_time = False
-    tmp_now = str.strip(datetime.datetime.now())
-    now = re.split('-:',tmp_now)
-    now_hour = now[3]
-    now_minute = now[4]
+    now = datetime.datetime.now()
+    now_hour = str(now.hour)
+    now_minute = str(now.minute)
     if now_hour == hour and now_minute == minute:
         flag_meeting_time = True
     return flag_meeting_time
@@ -41,7 +41,7 @@ def meeting_recomend(chatcat,event):
     user_want_time_question = "いつ待ち合わせするにゃ？"
     timer_message = "その時になったら連絡ほしいにゃ？"
     goodlack_message = "わかったにゃ！楽しんできてにゃ！"
-
+    error_message = "認識できなかったにゃ．．．ごめんにゃ．．もう一度やり直してほしいにゃ．．．"
 
     try:
         flag_meeting_start,flag_flow_select_place,flag_flow_decide_place,flag_flow_decide_time,flag_flow_timer,flag_loop = chatcat.data["meeting_flag"]
@@ -52,6 +52,7 @@ def meeting_recomend(chatcat,event):
         recommend_place_no1,recommend_place_no2,recommend_place_no3,decide_place,decide_time = "Init","Init","Init","Init","Init"
         year,month,day,hour,minute = 0,0,0,0,0
 
+    #タイマー
     if flag_flow_timer == True:
         flag_flow_timer = False
         before_meeting_time_message = f"あと１時間で{decide_place}で待ち合わせにゃ！急ぐにゃ！！"
@@ -61,12 +62,15 @@ def meeting_recomend(chatcat,event):
         day = str(day)
         hour = str(hour)
         minute = str(minute)
+        #使用するとき
         if event.postback.data == "use_timer":
             flag_loop = True
             schedule.every().days.at("00:00").do(meeting_timer_check_day)
+            #当日にタイマーセット
             if meeting_timer_check_day(year,month,day) == True:
                 schedule.every().day.at(f"{hour}:{minute}").do(send_meeting_time_checker)
                 chatcat.talk(timer_set_message)
+            #それ以外
             else:
                 chatcat.talk(timer_set_message)
                 while flag_loop == True:
@@ -76,11 +80,14 @@ def meeting_recomend(chatcat,event):
                         schedule.every().day.at(f"{hour}:{minute}").do(send_meeting_time_checker)
                         break
                     sleep(10)
+            #時間が来たらメッセージを送る
             if send_meeting_time_checker(hour,minute) == True:
                 chatcat.talk(before_meeting_time_message)
+        #使わないとき
         elif event.postback.data == "no_use_timer":
             chatcat.talk(goodlack_message)
 
+    #時間決める
     if flag_flow_decide_time == True:
         tmp_time = re.split('[-T:]',event.postback.params["datetime"])
         year = int(tmp_time[0])
@@ -90,6 +97,7 @@ def meeting_recomend(chatcat,event):
         minute = int(tmp_time[4])
         flag_flow_decide_time = False
         flag_flow_timer = True
+        #時間調（ex　2000年1月1日00：00待ち合わせ→1999年12月31日23：00にタイマー）
         if hour == 0:
             day = day - 1
         if day < 0:
@@ -121,7 +129,7 @@ def meeting_recomend(chatcat,event):
         chatcat.talk(decide_message + timer_message)
         chatcat.add_carousel("タイマー",columns_list)
 
-
+    #場所選択
     if flag_flow_decide_place == True:
         if event.postback.data == "place_no1":
             decide_place = recommend_place_no1
@@ -146,6 +154,7 @@ def meeting_recomend(chatcat,event):
         chatcat.talk(place_dicide_message + user_want_time_question)
         chatcat.add_carousel("時間指定",columns_list)
 
+    #場所決め
     if flag_flow_select_place == True:
         recommend_place_no1 = "osaka"
         recommend_place_no2 = "kyoto"
@@ -153,6 +162,7 @@ def meeting_recomend(chatcat,event):
         flag_flow_select_place = False
         if recommend_place_no1 == "Init" and recommend_place_no1 == "Init" and recommend_place_no1 == "Init":
             flag_meeting_start = True
+            chatcat.talk(error_message)
         else:
             flag_flow_decide_place = True
             #カルーセル内容
@@ -191,6 +201,7 @@ def meeting_recomend(chatcat,event):
             chatcat.talk(select_message)
             chatcat.add_carousel("おすすめ一覧",columns_list)
             
+    #起動メッセージ
     if flag_meeting_start == True:
         flag_meeting_start = False
         flag_flow_select_place = True
