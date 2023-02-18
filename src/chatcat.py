@@ -58,8 +58,11 @@ class ChatCat():
         elif self.is_running:
             if event.type == "postback" and event.postback.data in self.mode_dict:
                 self.mode = event.postback.data
-            elif event.type == "message" and event.message.text == 'おみくじ':
-                self.mode = "omikuji"
+            elif event.type == "message" and event.message.type == "text":
+                if event.message.text == 'おみくじ':
+                    self.mode = "omikuji"
+                elif event.message.text == 'ルーレット':
+                    self.mode = "roulette"
             self.reply(event)
 
     def start(self):
