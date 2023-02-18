@@ -169,6 +169,8 @@ def meeting_recomend(chatcat,event):
 
     #場所決め
     if flag_flow_select_place == True:
+        select_message = f"{event.message.text}で待ち合わせするなら、ここがおすすめにゃ！"
+        chatcat.talk(select_message)
         messaged_place_name(chatcat,event,search_results,recommend_place)
         recommend_place[0] = ""
         recommend_place[1] = "kyoto"
@@ -211,10 +213,6 @@ def meeting_recomend(chatcat,event):
             #         ]
             #     )
             # )
-            select_message = f"{event.message.text}で待ち合わせするなら、ここがおすすめにゃ！"
-            chatcat.talk(select_message)
-            chatcat.add_carousel("おすすめ一覧",columns_list)
-            
     #起動メッセージ
     if flag_meeting_start == True:
         flag_meeting_start = False
@@ -224,6 +222,7 @@ def meeting_recomend(chatcat,event):
     chatcat.data["meeting_flag"] = [flag_meeting_start,flag_flow_select_place,flag_flow_decide_place,flag_flow_decide_time,flag_flow_timer,flag_loop]
     chatcat.data["meeting_data"] = [recommend_place,decide_place,decide_time]
     chatcat.data["meeting_time"] = [year,month,day,hour,minute]
+    chatcat.data["search_results"] = search_results
 
 def messaged_place_name(chatcat,event,search_results,recommend_place):
     global nearbysearch_api_url,geocode_api_url, google_api_key
@@ -276,7 +275,7 @@ def find_meeting_place(chatcat,latitude, longitude, keyword,search_results,recom
         if count == 3:
             break
     chatcat.data["search_results"] = search_results
-    chatcat.add_carousel("店舗表示",columns_list)
+    chatcat.add_carousel("おすすめ一覧",columns_list)
 
 #URLの変更、写真の取得
 def clean_up(chatcat,name,url,data,i,columns_list):
@@ -302,7 +301,7 @@ def clean_up(chatcat,name,url,data,i,columns_list):
     columns_list.append(CarouselColumn(
         thumbnail_image_url=f'{photo_url}',
         title=f'{name}',
-        text=f'お店の説明{url}',
+        text=f'お店の説明',
         actions=[URIAction( label=f'{name}',uri = f'{url}',),
                  PostbackAction(label="決定",data=i)])
     )
