@@ -9,6 +9,6 @@ def roulette(chatcat,event):
     else:
         place_name_list = ""
         for data in search_results:
-            place_name_list += data["name"] + "、"
-        chatcat.talk("{place_name_list}のルーレットを回してみたにゃ")
-        chatcat.talk(search_results[random.randint(0,len(search_results)-1)])
+            place_name_list += data["name"] + "\n"
+        chatcat.talk(f"{place_name_list}のルーレットを回してみたにゃ")
+        chatcat.talk(search_results[random.randint(0,len(search_results)-1)]["name"] + "にゃ")
