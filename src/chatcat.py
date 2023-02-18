@@ -51,9 +51,9 @@ class ChatCat():
 
     def run(self, event):
         self.replies = list()
-        if event.type == "message" and event.message.text == 'start':
+        if event.type == "message" and event.message.type == "text" and event.message.text == 'start':
             self.start()
-        elif event.type == "message" and event.message.text == 'stop':
+        elif event.type == "message" and event.message.type == "text" and event.message.text == 'stop':
             self.stop()
         elif self.is_running:
             if event.type == "postback" and event.postback.data in self.mode_dict:
