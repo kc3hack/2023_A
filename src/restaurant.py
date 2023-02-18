@@ -46,7 +46,6 @@ def restaurant_recomend(chatcat,event):
         chatcat.mode = "normal"
 
     chatcat.data["restaurant_data"] = columns_list,message_count
-    chatcat.data["search_results"] = search_results
 
 
 
@@ -60,7 +59,7 @@ def selected_restaurant(chatcat,event):
 
 def selected_help(chatcat,event):
     text = "helpメッセージ"
-    chatcat.talk(text)    
+    chatcat.talk(text)
 
 def messaged_place_name(chatcat,event,search_results):
     global nearbysearch_api_url,geocode_api_url, google_api_key
@@ -109,8 +108,9 @@ def find_restaurant(chatcat,latitude, longitude, keyword,search_results):
         if clean_up(chatcat,name,url,data,count,columns_list):
             search_results.append(result)
             count += 1
-        if count > 10:
+        if count == 10:
             break
+    chatcat.data["search_results"] = search_results
     chatcat.add_carousel("店舗表示",columns_list)
 
 #URLの変更、写真の取得
@@ -134,13 +134,10 @@ def clean_up(chatcat,name,url,data,i,columns_list):
         except:
             return None
 
-    encoded_url = urllib.parse.quote(url,safe=f"{url_first}"+f"{url_last}")
-    print(f"{encoded_url}\n")
-
     columns_list.append(CarouselColumn(
         thumbnail_image_url=f'{photo_url}',
         title=f'{name}',
-        text='お店の説明',
-        actions=[URIAction( label=f'{name}',uri = f'{encoded_url}',)])
+        text=f'お店の説明{url}',
+        actions=[URIAction( label=f'{name}',uri = f'{url}',)])
     )
     return "OK"
