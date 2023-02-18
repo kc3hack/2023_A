@@ -109,7 +109,7 @@ def find_restaurant(chatcat,latitude, longitude, keyword,search_results):
         if clean_up(chatcat,name,url,data,count,columns_list):
             search_results.append(result)
             count += 1
-        if count > 10:
+        if count == 10:
             break
     chatcat.add_carousel("店舗表示",columns_list)
 
