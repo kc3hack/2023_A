@@ -58,6 +58,8 @@ class ChatCat():
         elif self.is_running:
             if event.type == "postback" and event.postback.data in self.mode_dict:
                 self.mode = event.postback.data
+            elif event.type == "message" and event.message.text == 'おみくじ':
+                self.mode = "omikuji"
             self.reply(event)
 
     def start(self):
@@ -104,3 +106,6 @@ class ChatCat():
 
     def add_carousel(self,alt_text,columns):
         self.replies.append(TemplateSendMessage(alt_text=alt_text,template=CarouselTemplate(columns=columns)))
+
+    def add_quick_reply(self,text,items):
+        self.replies.append(TextSendMessage(text=text,quick_reply=QuickReply(items=items)))
