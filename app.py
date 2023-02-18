@@ -50,18 +50,17 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    chatcat = get_chatcat(event)
-    chatcat.run(event)
-    line_bot_api.reply_message(event.reply_token,chatcat.replies)
+    receive_message(event)
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
-    chatcat = get_chatcat(event)
-    chatcat.run(event)
-    line_bot_api.reply_message(event.reply_token,chatcat.replies)
+    receive_message(event)
 
 @handler.add(MessageEvent, message=LocationMessage)
 def handle_location_message(event):
+    receive_message(event)
+
+def receive_message(event):
     chatcat = get_chatcat(event)
     chatcat.run(event)
     line_bot_api.reply_message(event.reply_token,chatcat.replies)

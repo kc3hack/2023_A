@@ -12,6 +12,11 @@ from flask import Flask, request, abort
 
 from utils.myGPT import generate_text
 
+from datetime import datetime, timedelta
+import time
+from pytz import timezone
+JST = timezone('Asia/Tokyo')
+
 from linebot import (LineBotApi, WebhookHandler)
 from linebot.exceptions import (InvalidSignatureError)
 from linebot.models import (
@@ -21,6 +26,7 @@ from linebot.models import (
 )
 from linebot.models.actions import PostbackAction
 
+line_bot_api = LineBotApi(open("secrets/line_channel_access_token.txt").read().strip())
 place_list = ['待ち合わせ', '飲食店', 'アパレル', 'その他']
 
 class ChatCat():
@@ -112,3 +118,15 @@ class ChatCat():
 
     def add_quick_reply(self,text,items):
         self.replies.append(TextSendMessage(text=text,quick_reply=QuickReply(items=items)))
+
+    def send_message_at_time(event, text, scheduled_time):
+        now = datetime.now(JST)
+        scheduled_time = datetime.strptime(scheduled_time, '%Y-%m-%d %H:%M').replace(tzinfo=JST)
+        time_diff = (scheduled_time - now).total_seconds()
+
+        if time_diff < 0:
+            time.sleep(time_diff)
+            if event.source.type == 'user':
+                line_bot_api.push_message(event.source.user_id, TextSendMessage(text=text))
+            elif event.source.type == 'group':
+                line_bot_api.push_message(event.source.group_id, TextSendMessage(text=text))
