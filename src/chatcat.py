@@ -1,5 +1,6 @@
 # LINEBotのメインクラス
 import os
+import threading
 
 from src.chat import chat
 from src.omikuji import omikuji
@@ -119,12 +120,12 @@ class ChatCat():
     def add_quick_reply(self,text,items):
         self.replies.append(TextSendMessage(text=text,quick_reply=QuickReply(items=items)))
 
-    def send_message_at_time(event, text, scheduled_time):
+    def send_message_at_time(self, event, text, scheduled_time):
         now = datetime.now(JST)
-        scheduled_time = datetime.strptime(scheduled_time, '%Y-%m-%d %H:%M').replace(tzinfo=JST)
-        time_diff = (scheduled_time - now).total_seconds()
+        time_diff = (scheduled_time - now).total_seconds() - 60*60
 
-        if time_diff < 0:
+        self.talk(f"{time_diff}秒後にメッセージを送信します")
+        if time_diff > 0:
             time.sleep(time_diff)
             if event.source.type == 'user':
                 line_bot_api.push_message(event.source.user_id, TextSendMessage(text=text))

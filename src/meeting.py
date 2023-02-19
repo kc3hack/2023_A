@@ -6,6 +6,9 @@ from bs4 import BeautifulSoup
 import requests
 import json
 import urllib.parse
+from datetime import datetime, timedelta
+from pytz import timezone
+import threading
 
 from linebot import (LineBotApi, WebhookHandler)
 from linebot.exceptions import (InvalidSignatureError)
@@ -56,12 +59,12 @@ def send_meeting_time_checker(hour,minute):
 def meeting_recomend(chatcat,event):
     try:
         flag_meeting_start,flag_flow_select_place,flag_flow_decide_place,flag_flow_decide_time,flag_flow_timer,flag_loop = chatcat.data["meeting_flag"]
-        recommend_place,decide_place,decide_time = chatcat.data["meeting_data"]
+        recommend_place,decide_place,decide_time,date_time = chatcat.data["meeting_data"]
         year,month,day,hour,minute = chatcat.data["meeting_time"]
         search_results = chatcat.data["search_results"]
     except:
         flag_meeting_start,flag_flow_select_place,flag_flow_decide_place,flag_flow_decide_time,flag_flow_timer,flag_loop = True, False, False, False, False, False
-        recommend_place,decide_place,decide_time = [],"Init","Init"
+        recommend_place,decide_place,decide_time,date_time = [],"Init","Init",None
         year,month,day,hour,minute = 0,0,0,0,0
         search_results = []
 
@@ -78,35 +81,26 @@ def meeting_recomend(chatcat,event):
         #使用するとき
         if event.postback.data == "use_timer":
             flag_loop = True
-            schedule.every().days.at("00:00").do(meeting_timer_check_day)
-            #当日にタイマーセット
-            if meeting_timer_check_day(year,month,day) == True:
-                schedule.every().day.at(f"{hour}:{minute}").do(send_meeting_time_checker)
-                chatcat.talk(timer_set_message)
-            #それ以外
-            else:
-                chatcat.talk(timer_set_message)
-                while flag_loop == True:
-                    schedule.run_pending()
-                    if meeting_timer_check_day(year,month,day) == True:
-                        flag_loop = False
-                        schedule.every().day.at(f"{hour}:{minute}").do(send_meeting_time_checker)
-                        break
-                    sleep(10)
-            #時間が来たらメッセージを送る
-            if send_meeting_time_checker(hour,minute) == True:
-                chatcat.talk(before_meeting_time_message)
+            # date_time を JST に変換
+            date_time = date_time.astimezone(timezone('Asia/Tokyo'))
+            remind_message = threading.Thread(target=chatcat.send_message_at_time, args=(event, before_meeting_time_message, date_time))
+            remind_message.start()
+            chatcat.talk(timer_set_message)
+            chatcat.mode = "normal"
         #使わないとき
         elif event.postback.data == "no_use_timer":
             chatcat.talk(goodlack_message)
+            chatcat.mode = "normal"
 
     #時間決める
     if flag_flow_decide_time == True:
+        datetime_str = event.postback.params["datetime"]
+        date_time = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M')
         tmp_time = re.split('[-T:]',event.postback.params["datetime"])
         year = int(tmp_time[0])
         month = int(tmp_time[1])
         day = int(tmp_time[2])
-        hour = int(tmp_time[3])
+        hour = int(tmp_time[3])-1
         minute = int(tmp_time[4])
         flag_flow_decide_time = False
         flag_flow_timer = True
@@ -144,12 +138,7 @@ def meeting_recomend(chatcat,event):
 
     #場所選択
     if flag_flow_decide_place == True:
-        if event.postback.data == 0:
-            decide_place = recommend_place[0]
-        elif event.postback.data == 1:
-            decide_place = recommend_place[1]
-        elif event.postback.data == 2:
-            decide_place = recommend_place[2]
+        decide_place = event.postback.data
         flag_flow_decide_place = False
         flag_flow_decide_time = True
         columns_list = []
@@ -169,7 +158,10 @@ def meeting_recomend(chatcat,event):
 
     #場所決め
     if flag_flow_select_place == True:
-        select_message = f"{event.message.text}で待ち合わせするなら、ここがおすすめにゃ！"
+        if event.message.type == "text":
+            select_message = f"{event.message.text}で待ち合わせするなら、ここがおすすめにゃ！"
+        else:
+            select_message = f"ここがおすすめにゃ！"
         chatcat.talk(select_message)
         messaged_place_name(chatcat,event,search_results,recommend_place)
         recommend_place[0] = ""
@@ -220,7 +212,7 @@ def meeting_recomend(chatcat,event):
         chatcat.talk(start_message)
 
     chatcat.data["meeting_flag"] = [flag_meeting_start,flag_flow_select_place,flag_flow_decide_place,flag_flow_decide_time,flag_flow_timer,flag_loop]
-    chatcat.data["meeting_data"] = [recommend_place,decide_place,decide_time]
+    chatcat.data["meeting_data"] = [recommend_place,decide_place,decide_time,date_time]
     chatcat.data["meeting_time"] = [year,month,day,hour,minute]
     chatcat.data["search_results"] = search_results
 
@@ -245,7 +237,7 @@ def messaged_place_name(chatcat,event,search_results,recommend_place):
     longitude = location["lng"]
     
     # 取得した位置情報をfind_restaurant()に渡す。
-    find_meeting_place(chatcat,latitude,longitude,"待ち合わせ 広場",search_results,recommend_place)
+    find_meeting_place(chatcat,latitude,longitude,"待ち合わせ+広場",search_results,recommend_place)
 
 
 #緯度、経度から指定された場所の半径1km以内の店舗を探す
@@ -303,6 +295,7 @@ def clean_up(chatcat,name,url,data,i,columns_list):
         title=f'{name}',
         text=f'お店の説明',
         actions=[URIAction( label=f'{name}',uri = f'{url}',),
-                 PostbackAction(label="決定",data=i)])
+                 PostbackAction(label="決定",data=f'{name}')]
+    )
     )
     return "OK"
