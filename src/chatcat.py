@@ -78,31 +78,14 @@ class ChatCat():
         self.make_start_carousel()
 
     def make_start_carousel(self):
-        columns_list = []
-        columns_list.append(
-            CarouselColumn(
-                thumbnail_image_url="https://cdn.projectdesign.jp/uploads/201601/images/gazou/24_1.jpg",
-                title="飲食店",
-                text="指定された条件の飲食店を検索します",
-                actions=[
-                    PostbackAction(label="使用", data="restaurant"),
-                    PostbackAction(label="ヘルプ", data="help")
-                ]
-            )
-        )
-        columns_list.append(
-            CarouselColumn(
-                thumbnail_image_url="https://cdn.projectdesign.jp/uploads/201601/images/gazou/24_1.jpg",
-                title="待ち合わせ場所",
-                text="指定された条件の待ち合わせ場所を検索します",
-                actions=[
-                    PostbackAction(label="使用", data="meeting"),
-                    PostbackAction(label="ヘルプ", data="help")
-                ]
-            )
-        )
+        # クイックリプライ
+        items = [
+            QuickReplyButton(action=PostbackAction(label="飲食店検索",data="restaurant")),
+            QuickReplyButton(action=PostbackAction(label="待ち合わせ場所検索",data="meeting")),
+            QuickReplyButton(action=PostbackAction(label="ヘルプ",data="help"))
+        ]
 
-        self.add_carousel("スタート",columns_list)
+        self.add_quick_reply('どのモードで始めますにゃ？',items)
 
     def stop(self):
         self.is_running = False
@@ -124,7 +107,6 @@ class ChatCat():
         now = datetime.now(JST)
         time_diff = (scheduled_time - now).total_seconds() - 60*60
 
-        self.talk(f"{time_diff}秒後にメッセージを送信します")
         if time_diff > 0:
             time.sleep(time_diff)
             if event.source.type == 'user':
