@@ -83,6 +83,7 @@ def meeting_recomend(chatcat,event):
             if meeting_timer_check_day(year,month,day) == True:
                 schedule.every().day.at(f"{hour}:{minute}").do(send_meeting_time_checker)
                 chatcat.talk(timer_set_message)
+                chatcat.mode = "normal"
             #それ以外
             else:
                 chatcat.talk(timer_set_message)
@@ -96,9 +97,11 @@ def meeting_recomend(chatcat,event):
             #時間が来たらメッセージを送る
             if send_meeting_time_checker(hour,minute) == True:
                 chatcat.talk(before_meeting_time_message)
+                chatcat.mode = "normal"
         #使わないとき
         elif event.postback.data == "no_use_timer":
             chatcat.talk(goodlack_message)
+            chatcat.mode = "normal"
 
     #時間決める
     if flag_flow_decide_time == True:
