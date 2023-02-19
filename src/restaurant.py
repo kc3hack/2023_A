@@ -137,7 +137,7 @@ def clean_up(chatcat,name,url,data,i,columns_list):
     columns_list.append(CarouselColumn(
         thumbnail_image_url=f'{photo_url}',
         title=f'{name}',
-        text=f'お店の説明{url}',
+        text=f'お店の説明',
         actions=[URIAction( label=f'{name}',uri = f'{url}',)])
     )
     return "OK"
