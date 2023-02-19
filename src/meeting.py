@@ -2,15 +2,33 @@ import re
 import datetime
 import schedule
 from time import sleep
+from bs4 import BeautifulSoup
+import requests
+import json
+import urllib.parse
 
 from linebot import (LineBotApi, WebhookHandler)
 from linebot.exceptions import (InvalidSignatureError)
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,TemplateSendMessage,CarouselTemplate,CarouselColumn,
-    PostbackEvent,DatetimePickerAction,
+    PostbackEvent,URIAction,DatetimePickerAction,
     QuickReply, QuickReplyButton
 )
 from linebot.models.actions import PostbackAction
+
+line_bot_api = LineBotApi(open("secrets/line_channel_access_token.txt").read().strip())
+google_api_key = open("secrets/google_api_key.txt").read().strip()
+nearbysearch_api_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/"
+geocode_api_url = "https://maps.googleapis.com/maps/api/geocode/json"
+google_map_url = "https://www.google.com/maps/search/?api=1"
+url_first = "https://www.google.com/maps/place/?q=place_id:"
+url_last = "?g_st=il"
+
+start_message = "待ち合わせにゃね！どこで待ち合わせするにゃ？"
+user_want_time_question = "いつ待ち合わせするにゃ？"
+timer_message = "その時になったら連絡ほしいにゃ？"
+goodlack_message = "わかったにゃ！楽しんできてにゃ！"
+error_message = "認識できなかったにゃ．．．ごめんにゃ．．もう一度やり直してほしいにゃ．．．"
 
 #その日を確認する
 def meeting_timer_check_day(year,month,day):
@@ -36,21 +54,16 @@ def send_meeting_time_checker(hour,minute):
     return flag_meeting_time
 
 def meeting_recomend(chatcat,event):
-
-    start_message = "待ち合わせにゃね！どこで待ち合わせするにゃ？"
-    user_want_time_question = "いつ待ち合わせするにゃ？"
-    timer_message = "その時になったら連絡ほしいにゃ？"
-    goodlack_message = "わかったにゃ！楽しんできてにゃ！"
-    error_message = "認識できなかったにゃ．．．ごめんにゃ．．もう一度やり直してほしいにゃ．．．"
-
     try:
         flag_meeting_start,flag_flow_select_place,flag_flow_decide_place,flag_flow_decide_time,flag_flow_timer,flag_loop = chatcat.data["meeting_flag"]
-        recommend_place_no1,recommend_place_no2,recommend_place_no3,decide_place,decide_time = chatcat.data["meeting_data"]
+        recommend_place,decide_place,decide_time = chatcat.data["meeting_data"]
         year,month,day,hour,minute = chatcat.data["meeting_time"]
+        search_results = chatcat.data["search_results"]
     except:
         flag_meeting_start,flag_flow_select_place,flag_flow_decide_place,flag_flow_decide_time,flag_flow_timer,flag_loop = True, False, False, False, False, False
-        recommend_place_no1,recommend_place_no2,recommend_place_no3,decide_place,decide_time = "Init","Init","Init","Init","Init"
+        recommend_place,decide_place,decide_time = [],"Init","Init"
         year,month,day,hour,minute = 0,0,0,0,0
+        search_results = []
 
     #タイマー
     if flag_flow_timer == True:
@@ -131,12 +144,12 @@ def meeting_recomend(chatcat,event):
 
     #場所選択
     if flag_flow_decide_place == True:
-        if event.postback.data == "place_no1":
-            decide_place = recommend_place_no1
-        elif event.postback.data == "place_no2":
-            decide_place = recommend_place_no2
-        elif event.postback.data == "place_no3":
-            decide_place = recommend_place_no3
+        if event.postback.data == 0:
+            decide_place = recommend_place[0]
+        elif event.postback.data == 1:
+            decide_place = recommend_place[1]
+        elif event.postback.data == 2:
+            decide_place = recommend_place[2]
         flag_flow_decide_place = False
         flag_flow_decide_time = True
         columns_list = []
@@ -156,51 +169,50 @@ def meeting_recomend(chatcat,event):
 
     #場所決め
     if flag_flow_select_place == True:
-        recommend_place_no1 = "osaka"
-        recommend_place_no2 = "kyoto"
-        recommend_place_no3 = "kobe"
+        select_message = f"{event.message.text}で待ち合わせするなら、ここがおすすめにゃ！"
+        chatcat.talk(select_message)
+        messaged_place_name(chatcat,event,search_results,recommend_place)
+        recommend_place[0] = ""
+        recommend_place[1] = "kyoto"
+        recommend_place[2] = "kobe"
         flag_flow_select_place = False
-        if recommend_place_no1 == "Init" and recommend_place_no1 == "Init" and recommend_place_no1 == "Init":
+        if recommend_place[0] == "Init" and recommend_place[1] == "Init" and recommend_place[2] == "Init":
             flag_meeting_start = True
             chatcat.talk(error_message)
         else:
             flag_flow_decide_place = True
             #カルーセル内容
-            columns_list = []
-            columns_list.append(
-                CarouselColumn(
-                    thumbnail_image_url="https://cdn.projectdesign.jp/uploads/201601/images/gazou/24_1.jpg",
-                    title=recommend_place_no1,
-                    text="USJがあるところです",
-                    actions=[
-                        PostbackAction(label="決定", data="place_no1")
-                    ]
-                )
-            )
-            columns_list.append(
-                CarouselColumn(
-                    thumbnail_image_url="https://cdn.projectdesign.jp/uploads/201601/images/gazou/24_1.jpg",
-                    title=recommend_place_no2,
-                    text="お寺があるとこです",
-                    actions=[
-                        PostbackAction(label="決定", data="place_no2")
-                    ]
-                )
-            )
-            columns_list.append(
-                CarouselColumn(
-                    thumbnail_image_url="https://cdn.projectdesign.jp/uploads/201601/images/gazou/24_1.jpg",
-                    title=recommend_place_no3,
-                    text="お城があるとこです",
-                    actions=[
-                        PostbackAction(label="決定", data="place_no3")
-                    ]
-                )
-            )
-            select_message = f"{event.message.text}で待ち合わせするなら、ここがおすすめにゃ！"
-            chatcat.talk(select_message)
-            chatcat.add_carousel("おすすめ一覧",columns_list)
-            
+            # columns_list = []
+            # columns_list.append(
+            #     CarouselColumn(
+            #         thumbnail_image_url="https://cdn.projectdesign.jp/uploads/201601/images/gazou/24_1.jpg",
+            #         title=recommend_place_no1,
+            #         text="USJがあるところです",
+            #         actions=[
+            #             PostbackAction(label="決定", data="place_no1")
+            #         ]
+            #     )
+            # )
+            # columns_list.append(
+            #     CarouselColumn(
+            #         thumbnail_image_url="https://cdn.projectdesign.jp/uploads/201601/images/gazou/24_1.jpg",
+            #         title=recommend_place_no2,
+            #         text="お寺があるとこです",
+            #         actions=[
+            #             PostbackAction(label="決定", data="place_no2")
+            #         ]
+            #     )
+            # )
+            # columns_list.append(
+            #     CarouselColumn(
+            #         thumbnail_image_url="https://cdn.projectdesign.jp/uploads/201601/images/gazou/24_1.jpg",
+            #         title=recommend_place_no3,
+            #         text="お城があるとこです",
+            #         actions=[
+            #             PostbackAction(label="決定", data="place_no3")
+            #         ]
+            #     )
+            # )
     #起動メッセージ
     if flag_meeting_start == True:
         flag_meeting_start = False
@@ -208,5 +220,89 @@ def meeting_recomend(chatcat,event):
         chatcat.talk(start_message)
 
     chatcat.data["meeting_flag"] = [flag_meeting_start,flag_flow_select_place,flag_flow_decide_place,flag_flow_decide_time,flag_flow_timer,flag_loop]
-    chatcat.data["meeting_data"] = [recommend_place_no1,recommend_place_no2,recommend_place_no3,decide_place,decide_time]
-    chatcat.data["meeting_time"] = year,month,day,hour,minute
+    chatcat.data["meeting_data"] = [recommend_place,decide_place,decide_time]
+    chatcat.data["meeting_time"] = [year,month,day,hour,minute]
+    chatcat.data["search_results"] = search_results
+
+def messaged_place_name(chatcat,event,search_results,recommend_place):
+    global nearbysearch_api_url,geocode_api_url, google_api_key
+
+    params = {
+        "address": f"{event.message.text}",  # 検索対象の住所
+        "language": "ja",  # レスポンスの言語
+        "key": f"{google_api_key}"  # APIキー
+    }
+
+    # リクエストを送信する
+    response = requests.get(geocode_api_url, params=params)
+
+    # レスポンスのJSONデータを取得する
+    data = response.json()
+
+    # 緯度経度を取得する
+    location = data["results"][0]["geometry"]["location"]
+    latitude = location["lat"]
+    longitude = location["lng"]
+    
+    # 取得した位置情報をfind_restaurant()に渡す。
+    find_meeting_place(chatcat,latitude,longitude,"待ち合わせ 広場",search_results,recommend_place)
+
+
+#緯度、経度から指定された場所の半径1km以内の店舗を探す
+def find_meeting_place(chatcat,latitude, longitude, keyword,search_results,recommend_place):
+    global nearbysearch_api_url, google_api_key
+
+    # 半径1km県内の店を取得します
+    places_parameter = f"json?keyword={keyword}&types=food?language=ja&location={latitude},{longitude}&radius=1000&key={google_api_key}"
+    places_api = nearbysearch_api_url + places_parameter
+
+    response = requests.get(places_api)
+    soup = BeautifulSoup(response.content)
+    data = json.loads(soup.text)
+
+    columns_list = []
+    search_results = []
+    count  = 0
+    for result in data["results"]:
+        name = result["name"]
+        recommend_place.append(result["name"])
+        place_id = result["place_id"]
+        url = f"{url_first}{place_id}"
+
+        if clean_up(chatcat,name,url,data,count,columns_list):
+            search_results.append(result)
+            count += 1
+        if count == 3:
+            break
+    chatcat.data["search_results"] = search_results
+    chatcat.add_carousel("おすすめ一覧",columns_list)
+
+#URLの変更、写真の取得
+def clean_up(chatcat,name,url,data,i,columns_list):
+    #nameが20文字以上なら一つ目の空白以降を切り捨てる
+    if len(name) > 20:
+        name = name[:name.find(' ', 20)]
+        if len(name) > 20:
+            name = name[:20]
+
+    if data['status'] == 'ZERO_RESULTS':
+        # 結果が見つからない場合の処理
+        return None
+    elif data['status'] == 'OK':
+        try:
+            # 結果が見つかった場合の処理
+            # 写真のリファレンスを取得
+            photo_reference = data['results'][i]['photos'][0]['photo_reference']
+            # 写真のURLを生成
+            photo_url = f'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_reference}&key={google_api_key}'
+        except:
+            return None
+
+    columns_list.append(CarouselColumn(
+        thumbnail_image_url=f'{photo_url}',
+        title=f'{name}',
+        text=f'お店の説明',
+        actions=[URIAction( label=f'{name}',uri = f'{url}',),
+                 PostbackAction(label="決定",data=i)])
+    )
+    return "OK"

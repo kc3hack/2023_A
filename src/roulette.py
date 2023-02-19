@@ -12,3 +12,4 @@ def roulette(chatcat,event):
             place_name_list += data["name"] + "\n"
         chatcat.talk(f"{place_name_list}のルーレットを回してみたにゃ")
         chatcat.talk(search_results[random.randint(0,len(search_results)-1)]["name"] + "にゃ")
+    chatcat.mode = "normal"
